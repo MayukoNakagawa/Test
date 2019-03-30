@@ -1,4 +1,4 @@
-##clear previous analysis files in Results/
+## clear previous analysis files in Results/
 rm Results/Fastqc_Report/*
 rm Results/Phix-removed/*
 rm Results/Illumina_Adapter_Removed/*
@@ -9,16 +9,27 @@ rm Results/Denoised-paired/*
 rm Results/Denoised-paired/view/*
 rm Results/Taxonomic-analysis/*
 
-
-###remove phix reads
-rm_phix=Results/Phix-removed
+### define directories ####
+## Sample reads
 raw_data=Sample_reads
+
+## bbtools installed directory
 ADAPTSEQ=Software/bbmap/resources
 
-echo "remove Phix reads"
+## Results
+rm_phix=Results/Phix-removed
+rm_Adapter=Results/Illumina_Adapter_Removed
+rm_primer=Results/Primer-Filtered
+demux=Results/Demux
+denoised=Results/Denoised-paired
+taxonomy=Results/Taxonomic-analysis
+phylo_div=Results/Phylogenic_diversity
 
-rm -rf $working_dir
-mkdir $working_dir
+## reference dataset for taxonomy assignment
+classifier=Reference_Data/Silva132-99/silva-132-99-515-806-nb-classifier.qza
+
+###remove phix reads
+echo "remove Phix reads"
 
 cd $raw_data
 rm list.txt
@@ -27,14 +38,12 @@ ls *.fastq.gz > list.txt
 while read R1
 do read R2
 
-echo "Woring $R1 $R2" 
+   echo "Woring $R1 $R2" 
 
-bbduk.sh -Xmx20g in1=$R1 in2=$R2 out1=../$rm_phix/$R1 out2=../$rm_phix/$R2 ref=../$ADAPTSEQ/phix174_ill.ref.fa.gz  k=31  hdist=1
-done< list.txt
+   bbduk.sh -Xmx20g in1=$R1 in2=$R2 out1=../$rm_phix/$R1 out2=../$rm_phix/$R2 ref=../$ADAPTSEQ/phix174_ill.ref.fa.gz  k=31  hdist=1
+   done< list.txt
 
 ###remove Illumina Adapter
-rm_Adapter=Results/Illumina_Adapter_Removed
-
 echo "remove Illumina Adapter"
 
 while read R1
@@ -46,17 +55,13 @@ do read R2
    done< list.txt
 
 ###remove primers
-rm_primer=Results/Primer-Filtered
 
 # Forward and Reverse Sequence Primers(515F-GTGCCAGCMGCCGCGGTAA, 806R-GGACTACHVGGGTWTCTAAT)
 tag5='GTGCCAGCMGCCGCGGTAA'
 
 tag5_R='GGACTACHVGGGTWTCTAAT'
 
-mkdir ../$rm_primer/fastq
-
 while read R1
-
 do read R2
 
    echo "Working on $R1 $R2"
@@ -82,9 +87,9 @@ done< list.txt
 ########IMPORT TO QIIME2##############
 cd ../
 
+# start to use qiime2
 source activate qiime2-2019.1
 
-demux=Results/Demux
 #(the commands are changed from 2018 ver) 
 qiime tools import \
   --type 'SampleData[PairedEndSequencesWithQuality]' \
@@ -97,10 +102,8 @@ qiime demux summarize \
   --o-visualization $demux/demux-paired-end-stat.qzv
 
 ###Denoising Data###
-
-denoised=Results/Denoised-paired
-
 echo "Denoise Data"
+
 #change the trunc-len depend on the length of reads
 qiime dada2 denoise-paired \
   --i-demultiplexed-seqs  $results/$input_demux/demux-paired-end.qza \
@@ -115,7 +118,6 @@ qiime dada2 denoise-paired \
   --verbose
   
 echo "Visualize denoised paired reads"
-mkdir $denoised/view
 
 
 qiime feature-table summarize \
@@ -128,10 +130,7 @@ qiime feature-table tabulate-seqs \
   --o-visualization $denoised/view/rep-seqs.qzv
 
 ###Taxonomy classification with SILVA database #####
-
-taxonomy=Results/Taxonomic-analysis
-
-classifier=Reference_Data/Silva132-99/silva-132-99-515-806-nb-classifier.qza
+##classifier=Reference_Data/Silva132-99/silva-132-99-515-806-nb-classifier.qza
 
 echo "taxonomy assignment with using SILVA132"
 
@@ -155,14 +154,12 @@ qiime taxa barplot \
 ###### Phylogenic tree ####
 echo "making phylogenic tree"
 
-phylo_div=Results/Phylogenic_diversity
-
-echo "make aligned read data"
+cho "make aligned read data"
 qiime alignment mafft \
   --i-sequences $denoised/rep-seqs-dada2.qza \
   --o-alignment $phylo_div/aligned-rep-seqs.qza
 
-echo ""
+echo "do alignment"
 qiime alignment mask \
   --i-alignment $phylo_div/aligned-rep-seqs.qza \
   --o-masked-alignment $phylo_div/masked-aligned-rep-seqs.qza
