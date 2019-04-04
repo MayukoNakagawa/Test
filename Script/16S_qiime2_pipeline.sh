@@ -106,12 +106,12 @@ echo "Denoise Data"
 
 #change the trunc-len depend on the length of reads
 qiime dada2 denoise-paired \
-  --i-demultiplexed-seqs  $results/$input_demux/demux-paired-end.qza \
+  --i-demultiplexed-seqs  $input_demux/demux-paired-end.qza \
   --p-trunc-len-f 140 \
   --p-trunc-len-r 140 \
-  --o-representative-sequences  $results/$denoised/rep-seqs-dada2.qza \
-  --o-table  $results/$denoised/table-dada2.qza \
-  --o-denoising-stats $results/$denoised/stats-dada2.qza\
+  --o-representative-sequences  $denoised/rep-seqs-dada2.qza \
+  --o-table  $denoised/table-dada2.qza \
+  --o-denoising-stats $denoised/stats-dada2.qza\
   --p-n-threads 8 \
   --p-max-ee 2 \
   --p-trunc-q  2 \
