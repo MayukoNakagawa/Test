@@ -8,6 +8,8 @@ rm Results/Demux/*
 rm Results/Denoised-paired/*
 rm Results/Denoised-paired/view/*
 rm Results/Taxonomic-analysis/*
+rm Results/exported-table/*
+
 
 ### define directories ####
 ## Sample reads
@@ -150,6 +152,14 @@ qiime taxa barplot \
   --i-taxonomy $taxonomy/taxonomy.qza \
   --m-metadata-file metadata/meta_data.tsv \
   --o-visualization $taxonomy/taxa-bar-plots.qzv
+#export results as csv file
+qiile 
+
+
+###change the format from qza/qzv to csv
+qiime tools export \
+--input-path Results/Taxonomic-analysis/taxa-bar-plots.qzv \
+--output-path Results/exported-table
 
 ###### Phylogenic tree ####
 echo "making phylogenic tree"
